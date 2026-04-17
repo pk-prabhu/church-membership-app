@@ -47,7 +47,7 @@ table {
 """, unsafe_allow_html=True)
 
 # ---------------- CONFIG ----------------
-CHURCHES = ["Church A", "Church B", "Church C", "Church D"]
+CHURCHES = ["Sharon Mandhiram", "Abraham raraju Mandhiram", "Karagraharam Mandhiam", "Saradhapetta Mandhiram"]
 DATA_FOLDER = "data"
 
 USERS = {
@@ -100,11 +100,17 @@ def login():
 # ---------------- SIDEBAR ----------------
 def sidebar():
     st.sidebar.title("⚙️ Admin Panel")
+    return st.sidebar.radio("Navigation", ["Dashboard", "Add Member", "Logout"])
 
-    return st.sidebar.radio(
-        "Navigation",
-        ["Dashboard", "Add Member", "Logout"]
-    )
+# ---------------- CHURCH SELECTION ----------------
+def select_church():
+    st.title("⛪ Select Church")
+
+    church = st.selectbox("Choose Church", CHURCHES)
+
+    if st.button("Continue"):
+        st.session_state.church = church
+        st.session_state.page = "form"
 
 # ---------------- FORM ----------------
 def form():
@@ -140,8 +146,6 @@ def form():
         passport = st.file_uploader("Passport Photo")
         family = st.file_uploader("Family Photo")
 
-        church = st.selectbox("Church", CHURCHES)
-
         submit = st.form_submit_button("Preview")
 
         if submit:
@@ -160,7 +164,7 @@ def form():
                 "Children": children,
                 "Address": address,
                 "Occupation": occupation,
-                "Church": church
+                "Church": st.session_state.church
             }
 
             st.session_state.images = {"passport": passport, "family": family}
@@ -233,7 +237,7 @@ def main():
             st.warning("Access Denied")
 
     elif page == "Add Member":
-        form()
+        st.session_state.page = "select_church"
 
     elif page == "Logout":
         st.session_state.page = "login"
@@ -244,6 +248,12 @@ if st.session_state.page == "login":
 
 elif st.session_state.page == "main":
     main()
+
+elif st.session_state.page == "select_church":
+    select_church()
+
+elif st.session_state.page == "form":
+    form()
 
 elif st.session_state.page == "preview":
     preview()
