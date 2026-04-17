@@ -55,17 +55,14 @@ USERS = {
     "member": {"user": "1234"}
 }
 
-if not os.path.exists(DATA_FOLDER):
-    os.makedirs(DATA_FOLDER)
+os.makedirs(DATA_FOLDER, exist_ok=True)
 
 # ---------------- UTIL ----------------
 def get_file(church):
     return f"{DATA_FOLDER}/{church}.xlsx"
 
 def load_data(church):
-    if os.path.exists(get_file(church)):
-        return pd.read_excel(get_file(church))
-    return pd.DataFrame()
+    return pd.read_excel(get_file(church)) if os.path.exists(get_file(church)) else pd.DataFrame()
 
 def save_data(church, data):
     file = get_file(church)
@@ -94,6 +91,7 @@ def login():
         if username in USERS[role.lower()] and USERS[role.lower()][username] == password:
             st.session_state.role = role.lower()
             st.session_state.page = "main"
+            st.rerun()
         else:
             st.error("Invalid credentials")
 
@@ -102,7 +100,7 @@ def sidebar():
     st.sidebar.title("⚙️ Admin Panel")
     return st.sidebar.radio("Navigation", ["Dashboard", "Add Member", "Logout"])
 
-# ---------------- CHURCH SELECTION ----------------
+# ---------------- CHURCH SELECT ----------------
 def select_church():
     st.title("⛪ Select Church")
 
@@ -111,6 +109,7 @@ def select_church():
     if st.button("Continue"):
         st.session_state.church = church
         st.session_state.page = "form"
+        st.rerun()
 
 # ---------------- FORM ----------------
 def form():
@@ -169,6 +168,7 @@ def form():
 
             st.session_state.images = {"passport": passport, "family": family}
             st.session_state.page = "preview"
+            st.rerun()
 
 # ---------------- PREVIEW ----------------
 def preview():
@@ -190,6 +190,7 @@ def preview():
         save_data(data["Church"], df)
         st.success("Saved Successfully ✅")
         st.session_state.page = "main"
+        st.rerun()
 
 # ---------------- DASHBOARD ----------------
 def dashboard():
@@ -210,12 +211,10 @@ def dashboard():
     df = pd.concat(all_data)
 
     st.subheader("Baptized Analysis")
-    chart1 = df.groupby(["Church","Baptized"]).size().unstack().fillna(0)
-    st.bar_chart(chart1)
+    st.bar_chart(df.groupby(["Church","Baptized"]).size().unstack().fillna(0))
 
     st.subheader("Living Status Analysis")
-    chart2 = df.groupby(["Church","Living Status"]).size().unstack().fillna(0)
-    st.bar_chart(chart2)
+    st.bar_chart(df.groupby(["Church","Living Status"]).size().unstack().fillna(0))
 
     if st.session_state.role == "pastor":
         st.dataframe(df)
@@ -238,9 +237,15 @@ def main():
 
     elif page == "Add Member":
         st.session_state.page = "select_church"
+        st.rerun()
 
     elif page == "Logout":
+        # 🔥 CLEAR SESSION COMPLETELY
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+
         st.session_state.page = "login"
+        st.rerun()
 
 # ---------------- ROUTER ----------------
 if st.session_state.page == "login":
